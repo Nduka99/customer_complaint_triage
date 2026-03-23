@@ -353,9 +353,10 @@ LR Stacking Ensemble                     0.757  (+0.068)
 
 ### Hard Class Analysis & Systematic Confusions
 
-While the overall misclassification rate is 13.8% (37,745 errors out of 274,065 test samples), these errors are highly systematic and driven by genuine category overlap rather than random model failure. 
+While the overall misclassification rate is 13.8% (37,745 errors out of 274,065 test samples), these errors are highly systematic and driven by genuine category overlap rather than random model failure.
 
 **Top Confusion Pairs (39.5% of all errors):**
+
 - `Debt Collection` → `Credit Report` (27.9% of errors)
 - `Credit Report` → `Debt Collection` (11.6% of errors)
 - `Credit Card` → `Credit Report` (9.1% of errors)
