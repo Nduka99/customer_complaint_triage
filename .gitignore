@@ -1,0 +1,79 @@
+# ============================================================
+#  .gitignore — Customer Complaint Triage NLP Project
+# ============================================================
+
+# ── Data (too large for GitHub) ──────────────────────────────
+data/raw/
+data/processed/
+data/vector_store/
+data/cfpb_regulatory_docs/
+
+# ── Model weights & artefacts ────────────────────────────────
+models/
+notebooks/models/
+*.pt
+*.bin
+*.safetensors
+*.npy
+*.npz
+*.onnx
+
+# ── Planning documents (sensitive — local only) ─────────────
+*.md
+!README.md
+
+# ── Agent / AI config ───────────────────────────────────────
+.claude/
+CLAUDE.md
+TEAM_MANIFEST.md
+
+# ── Archived / stale notebooks ──────────────────────────────
+notebooks/_archive/
+notebooks/logs/
+notebooks/0.45.0
+notebooks/0.46.1
+
+# ── Diagnostic / private scripts ────────────────────────────
+scripts/_diag*.py
+
+# ── Reports (keep figures, exclude logs & summaries) ────────
+reports/logs/
+reports/summaries/
+
+# ── Vlog assets (private) ───────────────────────────────────
+vlog/
+
+# ── Virtual environments ────────────────────────────────────
+.nlpproj/
+.venv/
+env/
+venv/
+
+# ── Python cache ────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Jupyter ─────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── IDE ─────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.gemini/
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Environment variables ───────────────────────────────────
+.env
+.env.local

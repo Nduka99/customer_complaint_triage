@@ -1,0 +1,87 @@
+# ============================================================
+# CFPB Consumer Complaint Triage & Resolution System
+# Deep Learning for NLP - Requirements
+# Python 3.11.9
+# ============================================================
+
+# ---------------------------
+# Core Deep Learning
+# ---------------------------
+torch>=2.2.0
+torchvision>=0.17.0
+torchaudio>=2.2.0
+transformers>=4.40.0
+datasets>=2.19.0
+tokenizers>=0.19.0
+accelerate>=0.30.0
+optimum[onnxruntime]>=1.19.0
+bitsandbytes>=0.43.0
+sentencepiece>=0.2.0
+safetensors>=0.4.0
+peft>=0.11.0
+
+# ---------------------------
+# Traditional ML Baselines
+# ---------------------------
+scikit-learn>=1.4.0
+lightgbm>=4.3.0
+xgboost>=2.0.0
+scipy>=1.13.0
+imbalanced-learn>=0.12.0
+
+# ---------------------------
+# RAG & Agentic Orchestration
+# ---------------------------
+langchain>=0.2.0
+langgraph>=0.1.0
+langchain-community>=0.2.0
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+rank-bm25>=0.2.2
+
+# ---------------------------
+# Evaluation & Explainability
+# ---------------------------
+captum>=0.7.0
+shap>=0.45.0
+statsmodels>=0.14.0
+
+# ---------------------------
+# Hyperparameter Optimisation
+# ---------------------------
+optuna>=3.6.0
+
+# ---------------------------
+# Visualisation
+# ---------------------------
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.22.0
+umap-learn>=0.5.6
+wordcloud>=1.9.0
+
+# ---------------------------
+# Streamlit Application
+# ---------------------------
+streamlit>=1.35.0
+
+# ---------------------------
+# Data Processing
+# ---------------------------
+pandas>=2.2.0
+numpy>=1.26.0
+pyarrow>=16.0.0
+
+# ---------------------------
+# Utilities
+# ---------------------------
+tqdm>=4.66.0
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.2.0
+jupyter>=1.0.0
+ipykernel>=6.29.0
+ipywidgets>=8.1.0
+nbformat>=5.10.0
