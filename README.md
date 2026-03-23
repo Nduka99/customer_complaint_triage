@@ -213,6 +213,7 @@ cfpb-complaint-triage/
 | 09       | Ensemble                    | 5 ensemble strategies tested. LR stacking achieves 0.757, the best overall result                 |
 | 10       | RAG Pipeline                | Real CFPB regulatory documents, hybrid BM25+dense retrieval, product-filtered evaluation          |
 | 11       | RL Routing                  | 4-arm Thompson Sampling bandit, 4 experiments, agentic chain demo, RLHF theory                    |
+| 12       | Comprehensive Evaluation    | Classification metrics, McNemar's test, bootstrap CIs, temporal drift, and IG explainability      |
 
 ---
 
