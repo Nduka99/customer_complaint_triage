@@ -72,3 +72,6 @@ desktop.ini
 # ── Environment variables ───────────────────────────────────
 .env
 .env.local
+
+# ── Temporary / Test Scripts ────────────────────────────────
+test_early_exit.py
