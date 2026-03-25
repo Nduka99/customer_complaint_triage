@@ -199,6 +199,28 @@ class TriagePipeline:
         roberta_conf = float(roberta_probs[0][roberta_pred_id])
         trace.append(f"2. RoBERTa-D inference: {self.label_map[roberta_pred_id]} ({roberta_conf:.2f})")
 
+        # Early-exit gate: if RoBERTa-D's best class is below 0.65, the input
+        # is too uncertain to justify running the full pipeline. Skip ModernBERT,
+        # the stacker, and RAG — force immediate escalation to human review.
+        if roberta_conf < 0.65:
+            predicted_label = self.label_map[roberta_pred_id]
+            trace.append("3. Early-exit: RoBERTa-D confidence below 0.65 — skipping remaining pipeline")
+            trace.append("4. Forced escalation: input uncertainty too high for automated triage")
+            return {
+                "summary": f"Classified as: {predicted_label} ({roberta_conf*100:.1f}%)",
+                "classification": {
+                    "label": predicted_label,
+                    "confidence": roberta_conf
+                },
+                "routing": {
+                    "decision": "Human Escalation",
+                    "arm": 3,
+                    "reason": f"RoBERTa-D confidence {roberta_conf:.3f} below 0.65 early-exit threshold — forced escalation"
+                },
+                "rag_context": [],
+                "agentic_trace": trace
+            }
+
         # 2. Inference via ModernBERT
         # max_length=384 matches NB06b training config (NOT 512)
         modernbert_inputs = self.modernbert_tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=384)
