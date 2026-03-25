@@ -2,6 +2,10 @@
 
 A deep learning pipeline for automated classification, regulatory guidance retrieval, and intelligent routing of consumer financial complaints. Built on 1.8 million real complaints from the Consumer Financial Protection Bureau (CFPB), the system classifies complaints into 10 product categories, retrieves relevant regulatory examination procedures via hybrid RAG, and uses a Thompson Sampling bandit to route complaints optimally — including learning when to escalate to human review.
 
+**Live Demo**: The system is deployed and running at zero cost:
+- **Frontend (Vercel)**: [cfpb-triage-nduka.vercel.app](https://cfpb-triage-nduka.vercel.app)
+- **Backend API (Hugging Face Spaces)**: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
+
 ---
 
 ## Table of Contents
@@ -18,6 +22,7 @@ A deep learning pipeline for automated classification, regulatory guidance retri
 - [RAG Pipeline](#rag-pipeline)
 - [RL Routing](#rl-routing)
 - [Evaluation Summary](#evaluation-summary)
+- [Deployment](#deployment)
 - [Hardware and Reproducibility](#hardware-and-reproducibility)
 - [Installation](#installation)
 - [Limitations and Future Work](#limitations-and-future-work)
@@ -56,38 +61,52 @@ Consumer Complaint (raw text)
          |
          v
 +------------------------+
-|  Product Classifier    |     RoBERTa-D + ModernBERT + LR Stacking Ensemble
-|  (10-class, 0.757 F1)  |     Confidence score computed from max softmax
+|  RoBERTa-D Inference   |     Distilled RoBERTa (125M params)
+|  Early-exit gate       |     Confidence from max softmax
 +----------+-------------+
            |
      +-----+------+
      |             |
      v             v
- conf >= 0.60   conf < 0.60
+ conf >= 0.65   conf < 0.65
      |             |
-     v             v
-+----------+  +-----------+
-| Product- |  | Unfiltered|
-| filtered |  | RAG or    |
-| RAG      |  | Human     |
-| (1.00    |  | Escalation|
-|  hit@3)  |  |           |
-+----------+  +-----------+
-     |             |
-     v             v
+     |             v
+     |        +-----------+
+     |        | Early Exit|     Skip full pipeline,
+     |        | Human     |     force immediate
+     |        | Escalation|     escalation
+     |        +-----------+
+     v
++------------------------+
+|  ModernBERT Inference  |     ModernBERT-base (149M params)
++----------+-------------+
+           |
+           v
++------------------------+
+|  LR Stacking Ensemble  |     Combines RoBERTa-D + ModernBERT
+|  (10-class, 0.757 F1)  |     probability distributions
++----------+-------------+
+           |
+           v
++------------------------+
+|  Product-filtered RAG  |     BM25 over 2,689 CFPB regulatory
+|  (1.00 hit@3)          |     passages, scoped by prediction
++----------+-------------+
+           |
+           v
 +------------------------+
 |  RL Routing Bandit     |     4-arm Thompson Sampling
 |  (RoBERTa-D /         |     Trained on 1.8M real
 |   ModernBERT /         |     resolution outcomes
-|   Ensemble /           |
+|   Ensemble /           |     Escalation threshold: 0.55
 |   Human Escalation)    |
 +----------+-------------+
            |
            v
 +------------------------+
-|  Agent Response        |     Regulatory context + routing
-|  Classification +      |     decision + escalation flag
-|  Confidence + Context  |     if applicable
+|  Agent Response        |     Classification + confidence +
+|  JSON payload to       |     regulatory context + routing
+|  React frontend        |     decision + agentic trace
 +------------------------+
 ```
 
@@ -152,6 +171,7 @@ cfpb-complaint-triage/
 |-- requirements.txt
 |
 |-- data/
+|   |-- raw/                        (7.8 GB raw CFPB complaints)
 |   |-- processed/
 |   |   |-- train.parquet           (1,813,849 rows)
 |   |   |-- val.parquet             (331,178 rows)
@@ -159,10 +179,9 @@ cfpb-complaint-triage/
 |   |   |-- label_encoders.pkl
 |   |
 |   |-- cfpb_regulatory_docs/       (12 CFPB examination procedure PDFs)
-|   |-- vector_store/               (ChromaDB persistent storage)
+|   |-- vector_store/               (ChromaDB persistent storage, 2,689 passages)
 |
 |-- notebooks/
-|   |-- 01_text_as_data.ipynb
 |   |-- 02_data_acquisition_eda.ipynb
 |   |-- 03_preprocessing_pipeline.ipynb
 |   |-- 03b_class_separability_analysis.ipynb
@@ -177,20 +196,37 @@ cfpb-complaint-triage/
 |   |-- 09_ensemble.ipynb
 |   |-- 10_rag_pipeline.ipynb
 |   |-- 11_rl_routing.ipynb
+|   |-- 12_evaluation_comprehensive.ipynb
+|   |-- 13_deployment_export.ipynb
+|   |-- _archive/                   (earlier drafts and placeholder stubs)
 |
 |-- models/
 |   |-- roberta_full/               (non-distilled RoBERTa weights + predictions)
 |   |-- modernbert_full/            (ModernBERT weights + predictions)
 |   |-- roberta_distilled/          (distilled RoBERTa weights + predictions)
-|   |-- ensemble/                   (ensemble predictions + results)
+|   |-- ensemble/                   (LR stacker, knowledge base, bandit state)
 |   |-- ablation_study/             (ablation configs + results)
 |   |-- distillation/               (teacher soft labels)
-|   |-- ml_baselines/               (LogReg predictions)
 |   |-- rag_pipeline/               (knowledge base + evaluation)
 |   |-- rl_routing/                 (bandit state + experiment results)
+|   |-- evaluation_summary.json     (final model comparison with bootstrap CIs)
+|
+|-- cfpb-triage-backend/            (Gradio backend, deployed on HF Spaces)
+|   |-- app.py                      (Gradio interface + API endpoint)
+|   |-- pipeline.py                 (Ensemble + RAG + Bandit orchestration)
+|   |-- requirements.txt
+|
+|-- cfpb-triage-frontend/           (React frontend, deployed on Vercel)
+|   |-- src/
+|   |   |-- App.jsx                 (Root dashboard component)
+|   |   |-- api.js                  (Gradio client integration)
+|   |   |-- components/             (ComplaintInput, ResultsDashboard, AgenticTrace,
+|   |                                RagContext, RoutingBadge, LoadingState)
+|   |-- package.json
+|   |-- vite.config.js
 |
 |-- reports/
-|   |-- figures/                    (all visualisations by notebook)
+|   |-- figures/                    (140+ visualisations organised by notebook)
 ```
 
 ---
@@ -199,7 +235,6 @@ cfpb-complaint-triage/
 
 | Notebook | Purpose                     | Key Output                                                                                        |
 | -------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
-| 01       | Text as Data                | Tokenisation comparison (BPE variants), UMAP embeddings, attention heatmaps                       |
 | 02       | Data Acquisition and EDA    | CFPB dataset exploration, class distributions, volume analysis                                    |
 | 03       | Preprocessing Pipeline      | Temporal train/val/test split, label encoding, metadata features, parquet outputs                 |
 | 03b      | Class Separability Analysis | 7-method separability analysis, confusion patterns, hard class identification                     |
@@ -214,6 +249,7 @@ cfpb-complaint-triage/
 | 10       | RAG Pipeline                | Real CFPB regulatory documents, hybrid BM25+dense retrieval, product-filtered evaluation          |
 | 11       | RL Routing                  | 4-arm Thompson Sampling bandit, 4 experiments, agentic chain demo, RLHF theory                    |
 | 12       | Comprehensive Evaluation    | Classification metrics, McNemar's test, bootstrap CIs, temporal drift, and IG explainability      |
+| 13       | Deployment Export           | Model upload to HF Hub, ensemble artifact packaging, deployment readiness verification            |
 
 ---
 
@@ -312,7 +348,7 @@ Documents were extracted with PyMuPDF, chunked into approximately 400-word passa
 | Unfiltered (full knowledge base)           | 0.187      | 0.352      | 0.450      | 0.276 |
 | Product-filtered (production architecture) | 1.000      | 1.000      | 1.000      | 1.000 |
 
-Product-filtered retrieval uses the classifier's predicted product to scope the search to only that product's regulatory documents. This is the intended production architecture — the classifier and RAG pipeline are designed to work together. When classifier confidence falls below 0.60, the system falls back to unfiltered retrieval or human escalation.
+Product-filtered retrieval uses the classifier's predicted product to scope the search to only that product's regulatory documents. This is the production architecture — the classifier and RAG pipeline are designed to work together. When RoBERTa-D confidence falls below 0.65, the early-exit gate triggers and the complaint is escalated to human review without RAG retrieval.
 
 ---
 
@@ -391,6 +427,12 @@ The system addresses these overlapping categories through the confidence-based e
 
 ## Installation
 
+**Try the live demo first** — no installation required:
+- Frontend: [cfpb-triage-nduka.vercel.app](https://cfpb-triage-nduka.vercel.app)
+- Backend API: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
+
+**To reproduce locally**:
+
 ```bash
 git clone https://github.com/[username]/cfpb-complaint-triage.git
 cd cfpb-complaint-triage
@@ -416,26 +458,114 @@ matplotlib>=3.8.0
 seaborn>=0.13.0
 ```
 
-**Note**: The CFPB complaint dataset is publicly available at https://www.consumerfinance.gov/data-research/consumer-complaints/. The preprocessing pipeline (NB03) handles download and temporal splitting. Model weights are not included in this repository due to file size; they can be reproduced by running the training notebooks.
+**Data**: The CFPB complaint dataset is publicly available at https://www.consumerfinance.gov/data-research/consumer-complaints/. The preprocessing pipeline (NB03) handles download and temporal splitting.
+
+**Model weights**: Trained models are hosted on the Hugging Face Hub and can be loaded directly:
+- [`nduka1999/cfpb-roberta-distilled`](https://huggingface.co/nduka1999/cfpb-roberta-distilled) — Knowledge-distilled RoBERTa (Macro-F1: 0.750)
+- [`nduka1999/cfpb-modernbert`](https://huggingface.co/nduka1999/cfpb-modernbert) — Fine-tuned ModernBERT (Macro-F1: 0.736)
+- [`nduka1999/cfpb-ensemble-artifacts`](https://huggingface.co/nduka1999/cfpb-ensemble-artifacts) — LR stacker, knowledge base (2,689 passages), bandit state
+
+Alternatively, all models can be reproduced by running the training notebooks sequentially.
+
+---
+
+## Deployment
+
+The system is live and deployed at zero infrastructure cost. The architecture decouples the heavy ML backend from the lightweight user interface:
+
+```text
++-- Vercel (Frontend) --------+      HTTPS / Gradio Client     +-- HF Spaces (Backend) ----------------+
+|                              |   --------------------------->  |                                        |
+|  React 19 + Vite + Tailwind |   <---------------------------  |  Gradio API (/api/classify)            |
+|  Static SPA, CDN-delivered   |        JSON Response           |  RoBERTa-D + ModernBERT + LR Stacker  |
+|  cfpb-triage-nduka.vercel.app|                                |  BM25 RAG (2,689 passages)             |
+|  Cost: $0/month              |                                |  Thompson Sampling Bandit              |
++------------------------------+                                |  nduka1999/cfpb-triage-backend.hf.space|
+                                                                |  Cost: $0/month (cpu-basic free tier)  |
+                                                                +----------+-----------------------------+
+                                                                           |
+                                                                           v
+                                                                +-- HF Hub (Model Storage) ---+
+                                                                |  nduka1999/cfpb-roberta-     |
+                                                                |    distilled                 |
+                                                                |  nduka1999/cfpb-modernbert   |
+                                                                |  nduka1999/cfpb-ensemble-    |
+                                                                |    artifacts                 |
+                                                                |  Cost: $0 (public repos)     |
+                                                                +------------------------------+
+```
+
+### Backend (Hugging Face Spaces)
+- **Platform**: HF Spaces cpu-basic free tier (16 GB RAM, 2 CPU, 50 GB disk)
+- **Framework**: Gradio with auto-generated REST API at `/api/classify`
+- **Pipeline**: Lazy-loads models on first request to meet HF Spaces' 3-minute boot deadline. Subsequent requests are served from cached models in under 3 seconds.
+- **Early-exit gate**: If RoBERTa-D confidence < 0.65, the full pipeline is skipped and the complaint is immediately escalated to human review — saving compute on ambiguous inputs.
+
+### Frontend (Vercel)
+- **Platform**: Vercel Hobby tier (free), global edge CDN
+- **Stack**: React 19 + Vite + Tailwind CSS 4
+- **Integration**: Uses `@gradio/client` to communicate with the HF Spaces backend
+- **Cold-start handling**: Displays cached example results while the backend wakes from sleep, so users see a functional interface immediately
+
+### HF Hub (Model Storage)
+- Three public repositories host the trained weights and ensemble artifacts
+- Models are downloaded and cached automatically on HF Spaces at first request
 
 ---
 
 ## Limitations and Future Work
 
-**Current limitations**:
+### Current Limitations
 
-- Debt Management classification (35% F1) reflects genuine category overlap in the CFPB taxonomy rather than model failure, but remains an unsolved challenge.
-- Knowledge distillation used BART-large-mnli (400M) as teacher. A larger teacher model (7B+) would likely produce richer soft distributions but was infeasible on the available hardware.
-- The RAG knowledge base uses CFPB examination procedures as a proxy for complete regulatory guidance. A production system would incorporate consent orders, supervisory highlights, and company-specific policies.
-- The RL bandit operates on historical data. Online learning in a production deployment would require careful monitoring for reward signal drift.
+**Classification boundaries**
+- Debt Management classification (~35% F1) reflects genuine category overlap in the CFPB taxonomy rather than model failure. With only 1,846 training samples (0.1% of data) and high semantic overlap with Debt Collection, this class remains the hardest to disambiguate.
+- High-confidence misclassifications (>0.99 confidence on wrong predictions) occur when consumers describe cross-cutting issues (e.g., debt collection complaints that focus on credit report impact). The model is correct about the linguistic content but wrong about the regulatory category.
 
-**Future directions**:
+**Knowledge distillation**
+- The teacher model (BART-large-mnli, 400M parameters) was the largest feasible on an 8 GB GPU. A 7B+ teacher would likely produce richer soft distributions, particularly for tail classes, but was infeasible on the available hardware.
 
-- DeBERTa-v3 integration: the original primary model failed during training due to a known compatibility issue. Resolving this would provide a third architecture with genuinely different attention (disentangled).
-- Multi-task learning: joint training on product classification, issue identification, and response prediction using shared representations.
-- Hierarchical classification: a two-stage classifier that first groups similar categories (e.g., Debt Management + Debt Collection) then distinguishes within the group.
-- Online bandit deployment with production monitoring and reward signal validation.
-- ONNX export and INT8 quantisation for production-grade latency (planned as NB13).
+**RAG coverage**
+- The knowledge base is limited to 12 CFPB examination procedure PDFs (~2,689 passages). A production system would need to incorporate consent orders, supervisory highlights, enforcement actions, company-specific policies, and state-level regulations.
+- Retrieval is BM25-only in production (dense retrieval via MiniLM was dropped to avoid the ~60s encoding overhead on free-tier cold starts). This means retrieval quality degrades on queries with vocabulary mismatch.
+
+**RL routing**
+- The Thompson Sampling bandit operates on historical data with offline reward signals. It cannot adapt to distribution shifts without periodic retraining.
+- The reward signal is binary (positive/negative resolution), which collapses nuanced outcomes into a single bit.
+
+**Deployment constraints**
+- HF Spaces free tier introduces cold starts (~30-60s) when the backend has been idle. The frontend mitigates this with cached example results, but first-time users may still experience a wait.
+- CPU-only inference on free tier means latency is ~2-3 seconds per request after warm-up. GPU inference would reduce this to ~200ms but requires paid infrastructure.
+- The system is text-only: complaint attachments (scanned letters, screenshots of statements, PDFs) are not processed.
+
+### Future Work
+
+**Multimodal architecture**
+- Integrate a vision encoder (e.g., a LayoutLM or Donut-style architecture) to process scanned complaint letters, bank statements, and screenshots that consumers frequently attach. This would enable end-to-end triage of complaints that include both narrative text and documentary evidence.
+- OCR preprocessing pipeline (Tesseract or PaddleOCR) as a fallback for image-only submissions, feeding extracted text into the existing classification pipeline.
+- Multimodal fusion layer that combines text embeddings with document layout features for richer complaint representations.
+
+**Model improvements**
+- DeBERTa-v3 integration: the original primary model failed during training due to a known compatibility issue. Resolving this would provide a third architecture with genuinely different attention (disentangled attention) for the ensemble.
+- Hierarchical classification: a two-stage classifier that first groups confusable categories (e.g., Debt Management + Debt Collection + Credit Report) then distinguishes within the group, directly addressing the dominant error modes.
+- Multi-task learning: joint training on product classification, issue identification, and response prediction using shared transformer representations, enabling the model to leverage signal across related tasks.
+- Larger teacher models (7B+ LLMs with 4-bit quantisation) for knowledge distillation on higher-VRAM hardware, producing richer inter-class soft labels.
+
+**RAG enhancements**
+- Restore hybrid BM25 + dense retrieval (MiniLM) with Reciprocal Rank Fusion once infrastructure supports the ~60s warm-up cost, or pre-encode passages offline and load vectors directly.
+- Expand the knowledge base with CFPB consent orders, enforcement actions, supervisory highlights, and state-level regulatory guidance.
+- Implement a generative RAG layer (e.g., a fine-tuned small LLM) that synthesises retrieved passages into actionable regulatory summaries rather than returning raw chunks.
+
+**Production hardening**
+- ONNX export and INT8 quantisation for sub-200ms inference latency on CPU.
+- Online bandit learning with production monitoring, reward signal validation, and drift detection.
+- A/B testing framework to evaluate routing policy changes against the current production bandit.
+- Horizontal scaling via container orchestration (e.g., Kubernetes) for high-throughput deployments beyond the free tier.
+- Automated retraining pipeline triggered by temporal drift detection (implemented in NB12 but not yet operationalised).
+
+**Explainability and trust**
+- Integrated Gradients attribution maps (prototyped in NB12) surfaced directly in the frontend, so users can see which tokens drove the classification.
+- Confidence calibration improvements: the current softmax confidence is known to be overconfident on misclassifications. Temperature scaling or Platt scaling could improve calibration.
+- SHAP-based feature importance for the LR stacking ensemble, showing how each model's contribution affects the final prediction.
 
 ---
 
