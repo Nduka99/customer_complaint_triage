@@ -3,7 +3,7 @@
 A deep learning pipeline for automated classification, regulatory guidance retrieval, and intelligent routing of consumer financial complaints. Built on 1.8 million real complaints from the Consumer Financial Protection Bureau (CFPB), the system classifies complaints into 10 product categories, retrieves relevant regulatory examination procedures via hybrid RAG, and uses a Thompson Sampling bandit to route complaints optimally — including learning when to escalate to human review.
 
 **Live Demo**: The system is deployed and running at zero cost:
-- **Frontend (Vercel)**: [cfpb-triage-nduka.vercel.app]([https://cfpb-triage-nduka.vercel.app](https://customer-complaint-triage-5k59jv75a-nduka99s-projects.vercel.app/))
+- **Frontend (Vercel)**: [cfpb-triage-nduka.vercel.app](https://customer-complaint-triage-1m1bh1vqk-nduka99s-projects.vercel.app/)
 - **Backend API (Hugging Face Spaces)**: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
 
 ---
