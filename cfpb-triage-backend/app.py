@@ -28,5 +28,5 @@ demo = gr.Interface(
 )
 
 # launch() starts the Gradio server — this is what keeps the HF Space alive.
-# HF Spaces injects the correct host/port via environment variables.
-demo.launch()
+# HF Spaces requires binding to 0.0.0.0 to be reachable.
+demo.launch(server_name="0.0.0.0", server_port=7860)
