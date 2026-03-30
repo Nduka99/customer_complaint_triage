@@ -9,13 +9,13 @@ import RoutingBadge from "./RoutingBadge";
  *   2. Confidence bar with color coding (red < 0.55, yellow 0.55-0.80, green > 0.80)
  *   3. RoutingBadge showing the Thompson Sampling bandit decision
  *
- * The 0.55 threshold for the confidence bar color matches the NB11 optimal
- * escalation threshold — visually reinforcing the RL routing logic.
+ * The 0.65 threshold for the confidence bar color matches the RoBERTa early-exit
+ * escalation threshold from pipeline.py — visually reinforcing the routing logic.
  */
 
-// Confidence → color mapping aligned with NB11 threshold (0.55)
+// Confidence → color mapping aligned with pipeline early-exit threshold (0.65)
 function getConfidenceColor(confidence) {
-  if (confidence < 0.55) return { bar: "bg-red-500", text: "text-red-400", label: "Low" };
+  if (confidence < 0.65) return { bar: "bg-red-500", text: "text-red-400", label: "Low" };
   if (confidence < 0.80) return { bar: "bg-yellow-500", text: "text-yellow-400", label: "Medium" };
   return { bar: "bg-emerald-500", text: "text-emerald-400", label: "High" };
 }
@@ -70,7 +70,7 @@ export default function ResultsDashboard({ result }) {
           <div className="flex justify-between mt-1">
             <span className="text-[10px] text-gray-600">0%</span>
             <span className="text-[10px] text-gray-600">
-              Escalation threshold: 55%
+              Escalation threshold: 65%
             </span>
             <span className="text-[10px] text-gray-600">100%</span>
           </div>
