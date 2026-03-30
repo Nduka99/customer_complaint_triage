@@ -25,6 +25,8 @@ demo = gr.Interface(
         ["A debt collector keeps calling me about a debt I already paid off and is threatening legal action."],
         ["My credit report shows a late payment that I never made. I have proof of on-time payment."],
     ],
+    cache_examples=False,  # Prevent Gradio from running examples at startup — avoids 1GB model
+                           # download blocking the HF health check before the server is ready.
 )
 
 # launch() starts the Gradio server — this is what keeps the HF Space alive.
