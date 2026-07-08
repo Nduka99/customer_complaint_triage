@@ -2,9 +2,10 @@ name: Keep HF Space Alive
 
 on:
   schedule:
-    # Ping every 14 minutes — HF free-tier sleeps after ~48h of inactivity,
-    # but the Gradio app itself can timeout/unload much sooner.
-    - cron: '*/14 * * * *'
+    # Every 6 hours — the HF free-tier sleep timer is 48h of inactivity, so
+    # this leaves plenty of margin even if GitHub delays or skips a run.
+    # (Every 14 minutes, as before, was ~105 runs/day for no extra benefit.)
+    - cron: '0 */6 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -13,13 +14,35 @@ jobs:
     steps:
       - name: Ping HF Space
         run: |
-          echo "Pinging HF Space to prevent cold sleep..."
+          echo "Pinging HF Space to reset the sleep timer..."
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
+            --max-time 60 \
             "https://nduka1999-cfpb-triage-backend.hf.space/")
           echo "Response code: $HTTP_CODE"
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 500 ]; then
             echo "Space is alive"
           else
             echo "Space may be rebuilding or down (HTTP $HTTP_CODE)"
+            exit 1
           fi
+
+      # If the container was restarted since the last ping, the models are
+      # lazy-loaded on the first classify request. Running one here means a
+      # real visitor never pays that ~1-2 min warm-up. Best-effort: a failure
+      # here (e.g. Space mid-rebuild) doesn't fail the workflow.
+      - name: Warm up the model pipeline
+        continue-on-error: true
+        run: |
+          echo "Sending a warm-up classification request..."
+          EVENT_ID=$(curl -s --max-time 60 -X POST \
+            "https://nduka1999-cfpb-triage-backend.hf.space/gradio_api/call/classify" \
+            -H "Content-Type: application/json" \
+            -d '{"data": ["Keep-alive warm-up: I was charged an undisclosed fee on my checking account."]}' \
+            | sed 's/.*"event_id": *"\([^"]*\)".*/\1/')
+          echo "Event: $EVENT_ID"
+          # Stream the result; allow up to 5 min in case models are cold-loading
+          curl -s --max-time 300 \
+            "https://nduka1999-cfpb-triage-backend.hf.space/gradio_api/call/classify/$EVENT_ID" \
+            | tail -c 300
+          echo ""
+          echo "Warm-up complete"
