@@ -4,41 +4,36 @@ import { useState } from "react";
 // The first 3 are clear-cut cases (high confidence → automated routing).
 // The last 2 are deliberately ambiguous — they blur boundaries between
 // confused class pairs identified in NB09/NB11 and should trigger the
-// low-confidence escalation path (confidence < 0.55 → human review).
+// low-confidence escalation path (referred for human review).
 const EXAMPLES = [
   {
     label: "Hidden bank fees",
-    icon: "🏦",
     text: "I opened a checking account and was charged hidden fees that were not disclosed during signup. The bank said these were standard maintenance fees but they were never mentioned in any of the paperwork I signed.",
-    hint: "High confidence",
+    ambiguous: false,
   },
   {
     label: "Credit report error",
-    icon: "📊",
     text: "My credit report shows a late payment that I never made. I have proof of on-time payment including bank statements and receipts. I have disputed this with the credit bureau twice but nothing has changed.",
-    hint: "High confidence",
+    ambiguous: false,
   },
   {
     label: "Debt collector harassment",
-    icon: "📞",
     text: "A debt collector keeps calling me about a debt I already paid off and is threatening legal action. I have sent them proof of payment three times but they refuse to acknowledge it and continue to call daily.",
-    hint: "High confidence",
+    ambiguous: false,
   },
   {
-    label: "Debt vs. credit mgmt",
-    icon: "⚠️",
+    label: "Debt plan gone wrong",
     // Deliberately ambiguous: mixes debt collection language with credit management
     // themes. NB09 found Debt Mgmt ↔ Debt Collection is the #1 confused pair (28.7%).
     text: "A company enrolled me in a debt management plan but then sold my accounts to a collector without notice. Now I am getting calls about debts I thought were being handled. I am not sure if this is a debt collection issue or a problem with the credit management service I signed up for.",
-    hint: "May escalate",
+    ambiguous: true,
   },
   {
-    label: "Loan or money transfer?",
-    icon: "⚠️",
+    label: "Held money transfer",
     // Ambiguous between Money Transfer and Payday/Personal Loan — two weak classes.
     // NB09: Money Xfer ↔ Bank Acct confusion at 18.9%, Payday at 23.8% escalation.
     text: "I used an app to send money to pay back a personal loan from a friend but the transfer was held and the company says I need to verify the source of funds. They will not release my money or return it and I am stuck with the debt and the fees from the app.",
-    hint: "May escalate",
+    ambiguous: true,
   },
 ];
 
@@ -65,10 +60,11 @@ export default function ComplaintInput({ onSubmit, loading }) {
       {/* Section header */}
       <div>
         <h2 className="text-lg font-semibold text-gray-100 tracking-tight">
-          Consumer Complaint
+          Analyze a complaint
         </h2>
         <p className="text-sm text-gray-400 mt-1">
-          Paste a complaint narrative to classify it through the agentic pipeline.
+          Paste or type a consumer complaint to see how it&rsquo;s categorized
+          and routed.
         </p>
       </div>
 
@@ -78,7 +74,7 @@ export default function ComplaintInput({ onSubmit, loading }) {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Describe the consumer's complaint in detail..."
+            placeholder="Describe what happened — the product or service involved and what went wrong…"
             rows={7}
             className="w-full bg-gray-900/60 border border-gray-700/50 rounded-xl px-4 py-3
                        text-gray-100 placeholder-gray-500 text-sm leading-relaxed
@@ -87,7 +83,7 @@ export default function ComplaintInput({ onSubmit, loading }) {
           />
           {/* Character count — subtle, bottom-right of textarea */}
           <span className="absolute bottom-3 right-3 text-xs text-gray-600">
-            {charCount > 0 && `${charCount} chars`}
+            {charCount > 0 && `${charCount.toLocaleString()} characters`}
           </span>
         </div>
 
@@ -108,10 +104,10 @@ export default function ComplaintInput({ onSubmit, loading }) {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Processing...
+              Analyzing…
             </>
           ) : (
-            "Classify Complaint"
+            "Analyze complaint"
           )}
         </button>
       </form>
@@ -130,16 +126,15 @@ export default function ComplaintInput({ onSubmit, loading }) {
               className={`text-left px-3 py-2.5 rounded-lg text-sm
                          border disabled:opacity-40 disabled:cursor-not-allowed
                          transition-all duration-150
-                         ${ex.hint === "May escalate"
+                         ${ex.ambiguous
                            ? "bg-amber-900/20 border-amber-700/30 text-amber-300 hover:bg-amber-900/30 hover:border-amber-600/50"
                            : "bg-gray-800/50 border-gray-700/30 text-gray-300 hover:text-white hover:bg-gray-800 hover:border-gray-600/50"
                          }`}
             >
-              <span className="mr-1.5">{ex.icon}</span>
               {ex.label}
-              {ex.hint === "May escalate" && (
+              {ex.ambiguous && (
                 <span className="block text-xs text-amber-500/70 mt-0.5">
-                  Ambiguous — may trigger escalation
+                  Ambiguous case — may be referred for review
                 </span>
               )}
             </button>
