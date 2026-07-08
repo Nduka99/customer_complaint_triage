@@ -13,7 +13,7 @@ React dashboard for the Agentic Consumer Complaint Triage System. Provides a rea
 | React          | 19.2.4  | UI framework                         |
 | Vite           | 8.0.1   | Build tool and dev server            |
 | Tailwind CSS   | 4.2.2   | Utility-first styling                |
-| @gradio/client | 2.1.0   | Communication with HF Spaces backend |
+| @gradio/client | 2.3.1   | Communication with HF Spaces backend |
 | ESLint         | 9.x     | Code quality                         |
 
 ## Features
