@@ -3,7 +3,7 @@
 A deep learning pipeline for automated classification, regulatory guidance retrieval, and intelligent routing of consumer financial complaints. Built on 1.8 million real complaints from the Consumer Financial Protection Bureau (CFPB), the system classifies complaints into 10 product categories, retrieves relevant regulatory examination procedures via hybrid RAG, and uses a Thompson Sampling bandit to route complaints optimally — including learning when to escalate to human review.
 
 **Live Demo**: The system is deployed and running at zero cost:
-- **Frontend (Vercel)**: [cfpb-triage-nduka.vercel.app](https://customer-complaint-triage.vercel.app/)
+- **Frontend (Vercel)**: [customer-complaint-triage.vercel.app](https://customer-complaint-triage.vercel.app/)
 - **Backend API (Hugging Face Spaces)**: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
 
 ---
@@ -428,14 +428,14 @@ The system addresses these overlapping categories through the confidence-based e
 ## Installation
 
 **Try the live demo first** — no installation required:
-- Frontend: [cfpb-triage-nduka.vercel.app](https://cfpb-triage-nduka.vercel.app)
+- Frontend: [customer-complaint-triage.vercel.app](https://customer-complaint-triage.vercel.app/)
 - Backend API: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
 
 **To reproduce locally**:
 
 ```bash
-git clone https://github.com/[username]/cfpb-complaint-triage.git
-cd cfpb-complaint-triage
+git clone https://github.com/Nduka99/customer_complaint_triage.git
+cd customer_complaint_triage
 pip install -r requirements.txt
 ```
 
@@ -478,7 +478,7 @@ The system is live and deployed at zero infrastructure cost. The architecture de
 |                              |   --------------------------->  |                                        |
 |  React 19 + Vite + Tailwind |   <---------------------------  |  Gradio API (/api/classify)            |
 |  Static SPA, CDN-delivered   |        JSON Response           |  RoBERTa-D + ModernBERT + LR Stacker  |
-|  cfpb-triage-nduka.vercel.app|                                |  BM25 RAG (2,689 passages)             |
+|  customer-complaint-triage   |                                |  BM25 RAG (2,689 passages)             |
 |  Cost: $0/month              |                                |  Thompson Sampling Bandit              |
 +------------------------------+                                |  nduka1999/cfpb-triage-backend.hf.space|
                                                                 |  Cost: $0/month (cpu-basic free tier)  |
