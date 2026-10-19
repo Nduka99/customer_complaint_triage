@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* The app is dark only; declaring it lets browsers draw form controls and scrollbars to match. */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-gray-950 text-gray-100 antialiased;
+  margin: 0;
+}
+
+/* One visible focus style for every control (WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--color-blue-400);
+  outline-offset: 2px;
+}
