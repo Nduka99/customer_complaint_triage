@@ -1,0 +1,12 @@
+// Cloudflare Workers static assets: the built app in dist/, served as a single-page app.
+// `npm run deploy` builds and uploads it. There is no Worker script, so every request is a
+// static asset request, which Cloudflare serves free and without a request limit.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "complaint-triage",
+  "compatibility_date": "2026-10-08",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+}

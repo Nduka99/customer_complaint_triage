@@ -44,6 +44,19 @@ test("a sleeping backend keeps the visitor waiting instead of showing an error",
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
+test("requests to Hugging Face carry no Referer", async ({ page }) => {
+  // Hugging Face refuses requests referred by some hosts (e.g. *.workers.dev), so none is sent.
+  const referers = [];
+  await page.route(BACKEND, (route) => {
+    referers.push(route.request().headers()["referer"] ?? null);
+    route.abort();
+  });
+  await page.goto("/");
+  await expect(page.getByRole("alert")).toContainText("Connection problem");
+  expect(referers.length).toBeGreaterThan(0);
+  expect(referers.filter(Boolean)).toEqual([]);
+});
+
 test("keyboard navigation starts at a visible skip link", async ({ page }) => {
   await page.route(BACKEND, () => {});
   await page.goto("/");

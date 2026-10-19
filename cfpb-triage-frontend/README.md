@@ -4,7 +4,7 @@ React dashboard for the Agentic Consumer Complaint Triage System. Provides a rea
 
 ## Live Demo
 
-**URL**: https://customer-complaint-triage.vercel.app
+**URL**: https://complaint-triage.nduka-nwagbo.workers.dev
 
 ## Tech Stack
 
@@ -45,9 +45,10 @@ React dashboard for the Agentic Consumer Complaint Triage System. Provides a rea
 
 ## Deployment Details
 
-- **Platform**: Vercel (Hobby tier — free), git-integrated: pushes to `main` auto-deploy
-- **Delivery**: Static SPA via Vercel's global edge CDN
+- **Platform**: Cloudflare Workers static assets (`wrangler.jsonc`); deployed by hand with `npm run deploy`, never on push
+- **Delivery**: Static SPA from Cloudflare's network; no Worker script, so every request is a free static asset request
 - **Cost**: $0/month
+- **Referrer policy**: the page sends no `Referer`, because Hugging Face's API refuses requests referred by `*.workers.dev` pages
 - **Build output**: `dist/` directory (Vite-compiled HTML/JS/CSS)
 - **Backend connection**: Communicates with `nduka1999/cfpb-triage-backend` on HF Spaces via the Gradio Client JS library
 
@@ -67,6 +68,13 @@ npm run build
 ```
 
 Produces optimised static assets in `dist/` ready for deployment.
+
+## Deploy
+
+```bash
+npx wrangler login   # once per machine
+npm run deploy       # builds, then uploads dist/ to Cloudflare
+```
 
 ## Checks
 

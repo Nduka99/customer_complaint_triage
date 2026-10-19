@@ -5,6 +5,9 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
+    <!-- Hugging Face's API answers 404 (with no CORS header) to requests whose Referer is a
+         *.workers.dev page, so the app sends no Referer; CORS only needs the Origin header. -->
+    <meta name="referrer" content="no-referrer" />
     <meta
       name="description"
       content="A research demo that categorizes consumer financial complaints, shows whether each would be handled automatically or go to a person, and surfaces the relevant regulation. Built on the CFPB Consumer Complaint Database."

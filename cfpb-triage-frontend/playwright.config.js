@@ -13,7 +13,7 @@ export default defineConfig({
     colorScheme: "dark",
     reducedMotion: "reduce",
   },
-  // Tests run against the production build: the same files Vercel serves.
+  // Tests run against the production build: the same files Cloudflare serves.
   webServer: {
     command: "npm run build && npm run preview -- --port 4173 --strictPort",
     url: "http://localhost:4173",

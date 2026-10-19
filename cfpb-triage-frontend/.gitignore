@@ -31,3 +31,6 @@ dist-ssr
 # Playwright output
 test-results
 playwright-report
+
+# Wrangler's local state
+.wrangler

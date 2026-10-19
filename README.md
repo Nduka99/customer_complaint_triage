@@ -3,7 +3,7 @@
 A deep learning pipeline for automated classification, regulatory guidance retrieval, and intelligent routing of consumer financial complaints. Built on 1.8 million real complaints from the Consumer Financial Protection Bureau (CFPB), the system classifies complaints into 10 product categories, retrieves relevant regulatory examination procedures via hybrid RAG, and uses a Thompson Sampling bandit to route complaints optimally — including learning when to escalate to human review.
 
 **Live Demo**: The system is deployed and running at zero cost:
-- **Frontend (Vercel)**: [customer-complaint-triage.vercel.app](https://customer-complaint-triage.vercel.app/)
+- **Frontend (Cloudflare)**: [complaint-triage.nduka-nwagbo.workers.dev](https://complaint-triage.nduka-nwagbo.workers.dev/)
 - **Backend API (Hugging Face Spaces)**: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
 
 ---
@@ -216,7 +216,7 @@ cfpb-complaint-triage/
 |   |-- pipeline.py                 (Ensemble + RAG + Bandit orchestration)
 |   |-- requirements.txt
 |
-|-- cfpb-triage-frontend/           (React frontend, deployed on Vercel)
+|-- cfpb-triage-frontend/           (React frontend, deployed on Cloudflare)
 |   |-- src/
 |   |   |-- App.jsx                 (Root dashboard component)
 |   |   |-- api.js                  (Gradio client integration)
@@ -428,7 +428,7 @@ The system addresses these overlapping categories through the confidence-based e
 ## Installation
 
 **Try the live demo first** — no installation required:
-- Frontend: [customer-complaint-triage.vercel.app](https://customer-complaint-triage.vercel.app/)
+- Frontend: [complaint-triage.nduka-nwagbo.workers.dev](https://complaint-triage.nduka-nwagbo.workers.dev/)
 - Backend API: [nduka1999/cfpb-triage-backend](https://huggingface.co/spaces/nduka1999/cfpb-triage-backend)
 
 **To reproduce locally**:
@@ -474,11 +474,11 @@ Alternatively, all models can be reproduced by running the training notebooks se
 The system is live and deployed at zero infrastructure cost. The architecture decouples the heavy ML backend from the lightweight user interface:
 
 ```text
-+-- Vercel (Frontend) --------+      HTTPS / Gradio Client     +-- HF Spaces (Backend) ----------------+
++-- Cloudflare (Frontend) ----+      HTTPS / Gradio Client     +-- HF Spaces (Backend) ----------------+
 |                              |   --------------------------->  |                                        |
 |  React 19 + Vite + Tailwind |   <---------------------------  |  Gradio API (/api/classify)            |
 |  Static SPA, CDN-delivered   |        JSON Response           |  RoBERTa-D + ModernBERT + LR Stacker  |
-|  customer-complaint-triage   |                                |  BM25 RAG (2,689 passages)             |
+|  complaint-triage            |                                |  BM25 RAG (2,689 passages)             |
 |  Cost: $0/month              |                                |  Thompson Sampling Bandit              |
 +------------------------------+                                |  nduka1999/cfpb-triage-backend.hf.space|
                                                                 |  Cost: $0/month (cpu-basic free tier)  |
@@ -501,8 +501,8 @@ The system is live and deployed at zero infrastructure cost. The architecture de
 - **Pipeline**: Lazy-loads models on first request to meet HF Spaces' 3-minute boot deadline. Subsequent requests are served from cached models in under 3 seconds.
 - **Early-exit gate**: If RoBERTa-D confidence < 0.65, the full pipeline is skipped and the complaint is immediately escalated to human review — saving compute on ambiguous inputs.
 
-### Frontend (Vercel)
-- **Platform**: Vercel Hobby tier (free), global edge CDN
+### Frontend (Cloudflare)
+- **Platform**: Cloudflare Workers static assets (free), deployed with `npm run deploy` in `cfpb-triage-frontend/`
 - **Stack**: React 19 + Vite + Tailwind CSS 4
 - **Integration**: Uses `@gradio/client` to communicate with the HF Spaces backend
 - **Cold-start handling**: Displays cached example results while the backend wakes from sleep, so users see a functional interface immediately
